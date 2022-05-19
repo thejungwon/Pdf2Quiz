@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" />
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <style>
+      .carousel-item{
+        align-items: center;
+        justify-content: center;
+      }
+      .card .progress {
+        position: absolute;
+        bottom: 0;
+        margin: 0;
+      }
+      .quiz-section.active {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        background-color: white;
+        top: 0;
+      }
+      .quiz-question {
+        text-align: center;
+      }
+      .quiz-image {
+        height: 400px;
+        align-items: center;
+        justify-content: center;
+      }
+      .quiz-options {
+        position: absolute;
+        width: 100%;
+        bottom: 0;
+        margin-bottom: 0;
+      }
+      .quiz-options .col {
+        text-align: center;
+        height: 100px;
+        background-color: black;
+        border: 1px solid white;
+        line-height: 100px;
+        font-size: 40px;
+        color: white;
+        cursor: pointer;
+      }
+      .quiz-options .col:nth-child(1) {
+        background-color: #f44336;
+      }
+      .quiz-options .col:nth-child(2) {
+        background-color: #f57f17;
+      }
+      .quiz-options .col:nth-child(3) {
+        background-color: #1b5e20;
+      }
+      .quiz-options .col:nth-child(4) {
+        background-color: #0d47a1;
+      }
+      .quiz-options .col:hover {
+        opacity: 0.8;
+      }
+      .quiz-options.quiz-result .col {
+        opacity: 0.3;
+      }
+      .quiz-options .col.correct {
+        opacity: 1;
+      }
+      .quiz-before {
+        position: absolute;
+        height: 100%;
+        width: 100%;
+      }
+      .quiz-after {
+        position: absolute;
+        height: 100%;
+        width: 100%;
+      }
+      .quiz-item {
+        height: 100%;
+        top: 0;
+        position: absolute;
+        width: 100%;
+        display: none;
+      }
+      .quiz-item.active {
+        display: block;
+      }
+      .pdf-thumbnail{
+        width:100%;
+        height:200px;
+        background-repeat: no-repeat;
+        background-size: auto;
+        background-position: center;
+
+      }
+      .card-title{
+        color:black !important;
+        font-size:15px!important;
+        left: unset !important;
+        right: 0!important;
+      }
+      .preloader-wrapper{
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        left: 0;
+        margin: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="nav-wrapper">
+        <a href="#" class="brand-logo center">Pdf2Quiz</a>
+      </div>
+    </nav>
+    <div class="carousel carousel-slider center">
+      <div class="carousel-fixed-item center">
+        <a class="btn white grey-text darken-text-2" id="upload-btn">Upload</a>
+        <input id="upload-file" type="file" style="display: none" onchange="uploadFile(this)" multiple />
+      </div>
+      <div class="carousel-item blue white-text valign-wrapper" href="#one!" style="visibility: visible">
+        <h1 >Did You Read The Paper?</h1>
+      </div>
+    </div>
+
+    <div class="container" id="main-page">
+      <div class="file-list">
+        <div class="row" id="quiz-list"></div>
+      </div>
+    </div>
+    <div id="quiz-section" class="quiz-section"></div>
+    <script>
+      let btn = document.getElementById("upload-btn");
+      btn.onclick = function () {
+        document.getElementById("upload-file").click();
+      };
+      function uploadFile(input) {
+        let ext = input.files[0]["name"].substring(input.files[0]["name"].lastIndexOf(".") + 1).toLowerCase();
+        var data = new FormData();
+        for (let i = 0; i < input.files.length; i++) {
+          data.append("files", input.files[i], input.files[i].name);
+          addQuiz(input.files[i].name);
+        }
+
+        fetch("/pdfs/", {
+          method: "POST",
+          body: data,
+        })
+          .then((response) => response.json())
+          .then((data) => console.log(data));
+      }
+
+      function addQuiz(file_name) {
+        let htmlTxt = ``;
+        htmlTxt += `<div class="col s12 m3">`;
+        htmlTxt += `    <div class="card">`;
+        htmlTxt += `        <div class="card-image">`;
+        htmlTxt += `            <div class="pdf-thumbnail">`; 
+        htmlTxt += `              <div class="preloader-wrapper small active">`;
+        htmlTxt += `                <div class="spinner-layer spinner-green-only">`;
+        htmlTxt += `                  <div class="circle-clipper left">`;
+        htmlTxt += `                    <div class="circle"></div>`;
+        htmlTxt += `                  </div>`;
+        htmlTxt += `                  <div class="gap-patch">`;
+        htmlTxt += `                        <div class="circle"></div>`;
+        htmlTxt += `                  </div>`;
+        htmlTxt += `                  <div class="circle-clipper right">`;
+        htmlTxt += `                    <div class="circle"></div>`;
+        htmlTxt += `                    </div>`;
+        htmlTxt += `                  </div>`;
+        htmlTxt += `                </div>`;
+        htmlTxt += `            </div>`;
+        htmlTxt += `            <span class="card-title">${new Date().toISOString().split("T")[0]}</span>`;
+        htmlTxt += `        </div>`;
+        htmlTxt += `        <div class="card-content">`;
+        htmlTxt += `            <p>${file_name}</p>`;
+        htmlTxt += `        </div>`;
+        htmlTxt += `        <div class="card-action">`;
+        htmlTxt += `            <a href="#" onclick=>START</a>`;
+        htmlTxt += `        </div>`;
+        htmlTxt += `    </div>`;
+        htmlTxt += `</div>`;
+        document.getElementById("quiz-list").innerHTML = htmlTxt + document.getElementById("quiz-list").innerHTML;
+      }
+
+      fetch("/pdfs/", {
+        method: "GET",
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          let htmlTxt = ``;
+          for (let pdf of data) {
+            let createdDate = new Date(pdf.created_date);
+            createdDate = createdDate.toISOString().split("T")[0];
+
+            htmlTxt += `<div class="col s12 m3">`;
+            htmlTxt += `    <div class="card">`;
+            htmlTxt += `        <div class="card-image">`;
+            htmlTxt += `            <div class="pdf-thumbnail" style="background-image:url(${pdf.thumbnail})"></div>`;
+            htmlTxt += `            <span class="card-title">${createdDate}</span>`;
+            htmlTxt += `        </div>`;
+            htmlTxt += `        <div class="card-content">`;
+            htmlTxt += `            <p>${pdf.file_name}</p>`;
+            htmlTxt += `        </div>`;
+            htmlTxt += `        <div class="card-action" >`;
+            if(pdf.is_ready){
+              htmlTxt += `            <a href="#" onclick=setQuiz(${pdf.id})>START</a>`;
+            }else{
+              htmlTxt += `            <a href="#" >START</a>`;
+            }
+            htmlTxt += `        </div>`;
+            htmlTxt += `    </div>`;
+            htmlTxt += `</div>`;
+            console.log("hello");
+          }
+          document.getElementById("quiz-list").innerHTML = htmlTxt;
+        });
+
+      function setQuiz(pdf_id) {
+        document.getElementById('main-page').style.display="none";
+        document.getElementById('quiz-section').classList.add("active");
+        fetch(`/pdfs/${pdf_id}`, {
+          method: "GET",
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data);
+            let randomQuiz = [];
+            let dict = {};
+
+            for (let quiz of data.quizzes) {
+              if (dict[quiz["answer"]] !== undefined) {
+                dict[quiz["answer"]].push(quiz);
+              } else {
+                dict[quiz["answer"]] = [quiz];
+              }
+            }
+            console.log(dict);
+            for (let keyword in dict) {
+              randomQuiz.push(dict[keyword][Math.floor(Math.random() * dict[keyword].length)]);
+            }
+            console.log(randomQuiz);
+            let htmlTxt = ``;
+            let cnt = 0;
+            for (let quiz of randomQuiz) {
+              if (cnt != 0) {
+                htmlTxt += `<div class="quiz-item">`;
+              } else {
+                htmlTxt += `<div class="quiz-item active">`;
+              }
+
+              htmlTxt += `<div class="quiz-before">`;
+              htmlTxt += `  <div class="row quiz-question">`;
+              htmlTxt += `    <h2>Choose the closest answer!</h2>`;
+              htmlTxt += `  </div>`;
+              htmlTxt += `  <div class="row quiz-image valign-wrapper">`;
+              htmlTxt += `    <img src="${quiz.masked_image}" />`;
+              htmlTxt += `  </div>`;
+              htmlTxt += `  <div class="row quiz-options" data-answer="${quiz.answer}">`;
+
+              let shuffled_options = JSON.parse(quiz.options).sort((a, b) => 0.5 - Math.random());
+              for (let option of shuffled_options) {
+                htmlTxt += `    <div class="col s6" onclick="check(this)" data-choice="${option}">${option}</div>`;
+              }
+              htmlTxt += `  </div>`;
+              htmlTxt += `  </div>`;
+              htmlTxt += `<div class="quiz-after" style="display:none;">`;
+              htmlTxt += `  <div class="row quiz-question">`;
+              htmlTxt += `    <h2>Nice!</h2>`;
+              htmlTxt += `  </div>`;
+              htmlTxt += `  <div class="row quiz-image valign-wrapper">`;
+              htmlTxt += `    <img src="${quiz.original_image}" />`;
+              htmlTxt += `  </div>`;
+              htmlTxt += `  <div class="row quiz-options quiz-result" data-answer="hello">`;
+              for (let option of shuffled_options) {
+                let correctness = option == quiz.answer ? "correct" : "";
+                htmlTxt += `    <div class="col s6 ${correctness}" onclick="check(this)" data-choice="${option}">${option}</div>`;
+              }
+              htmlTxt += `  </div>`;
+              htmlTxt += `  </div>`;
+              htmlTxt += `</div>`;
+              cnt += 1;
+            }
+            document.getElementById("quiz-section").innerHTML = htmlTxt;
+          });
+      }
+
+      function check(answer) {
+        if (answer.parentElement.dataset["answer"] == answer.dataset["choice"]) {
+          document.querySelector(".quiz-item.active .quiz-after h2").innerHTML = "Nice!";
+        } else {
+          document.querySelector(".quiz-item.active .quiz-after h2").innerHTML = ".......";
+        }
+        document.querySelector(".quiz-item.active .quiz-before").style.display = "none";
+        document.querySelector(".quiz-item.active .quiz-after").style.display = "block";
+
+        let current_item = document.querySelector(".quiz-item.active");
+        if (!current_item.nextSibling) {
+          setTimeout(function(){
+            document.getElementById("quiz-section").innerHTML = "";
+            document.getElementById("quiz-section").style.display = "none";
+            document.getElementById("main-page").style.display = "block";
+          },2000);
+        } else {
+          setTimeout(function () {
+            current_item.classList.remove("active");
+          }, 2000);
+
+          setTimeout(function () {
+            current_item.nextSibling.classList.add("active");
+          }, 2300);
+        }
+      }
+    </script>
+  </body>
+</html>

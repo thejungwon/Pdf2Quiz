@@ -1,0 +1,6 @@
+BUCKET_NAME = "<YOUR_GCP_BUCKET_NAME>"
+BROKER_URL = "redis://x.x.x.x:6379/0"
+DB_USER = ""
+DB_PASSWORD = ""
+DB_HOST = ""
+DB_DATABASE = ""
